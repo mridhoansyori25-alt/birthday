@@ -1,69 +1,376 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState, useRef } from "react";
+import confetti from "canvas-confetti";
+import {
+  Heart,
+  Sparkles,
+  Camera,
+  VolumeX,
+  Volume2,
+  Cake,
+  Stars,
+  Flame,
+  Share2,
+  Upload,
+} from "lucide-react";
+
+// Web Audio synthesizer for cute chime sounds & birthday tune
+class SoundPlayer {
+  private ctx: AudioContext | null = null;
+  private isMuted: boolean = false;
+
+  private initCtx() {
+    if (!this.ctx && typeof window !== "undefined") {
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext;
+      if (AudioCtx) {
+        this.ctx = new AudioCtx();
+      }
+    }
+    if (this.ctx && this.ctx.state === "suspended") {
+      this.ctx.resume();
+    }
+  }
+
+  playPop() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.12);
+  }
+
+  playChime() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+    const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+    notes.forEach((freq, idx) => {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
+      gain.gain.setValueAtTime(0.2, this.ctx.currentTime + idx * 0.08);
+      gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        this.ctx.currentTime + idx * 0.08 + 0.4
+      );
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(this.ctx.currentTime + idx * 0.08);
+      osc.stop(this.ctx.currentTime + idx * 0.08 + 0.4);
+    });
+  }
+
+  playBirthdayJingle() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+    const melody = [
+      { f: 392, d: 0.25 },
+      { f: 392, d: 0.25 },
+      { f: 440, d: 0.5 },
+      { f: 392, d: 0.5 },
+      { f: 523.25, d: 0.5 },
+      { f: 493.88, d: 0.8 },
+    ];
+    let time = this.ctx.currentTime;
+    melody.forEach((note) => {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(note.f, time);
+      gain.gain.setValueAtTime(0.25, time);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + note.d);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(time);
+      osc.stop(time + note.d);
+      time += note.d + 0.08;
+    });
+  }
+
+  toggleMute(muted: boolean) {
+    this.isMuted = muted;
+  }
+}
+
+const sounds = new SoundPlayer();
+
+export default function BirthdayPage() {
+  const [isCandleBlown, setIsCandleBlown] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleBlowCandle = () => {
+    if (!isCandleBlown) {
+      setIsCandleBlown(true);
+      sounds.playChime();
+      confetti({
+        particleCount: 100,
+        spread: 80,
+        origin: { y: 0.5 },
+        colors: ["#bae3fd", "#fecddb", "#fff2b2", "#fba0ba", "#7dd1fc"],
+      });
+    } else {
+      setIsCandleBlown(false);
+      sounds.playPop();
+    }
+  };
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setPhotoUrl(event.target.result as string);
+          sounds.playPop();
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleShare = () => {
+    if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(window.location.href);
+      setCopiedLink(true);
+      sounds.playPop();
+      setTimeout(() => setCopiedLink(false), 2500);
+    }
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <main className="relative min-h-screen bg-gradient-to-br from-[#f0f7ff] via-[#fff1f5] to-[#e4f2fe] text-slate-700 overflow-x-hidden pb-16">
+      {/* Floating Pastel Balloons & Decor */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {/* Soft pastel balloon 1 (Pink) */}
+        <div className="absolute top-12 left-6 md:left-16 w-20 h-28 bg-gradient-to-b from-[#ffd1df] to-[#fba0ba] rounded-[50%_50%_45%_45%] opacity-70 animate-float shadow-lg shadow-pink-200/50">
+          <div className="absolute bottom-[-10px] left-1/2 -translate-x-1/2 w-2 h-3 bg-pink-300 rounded-sm"></div>
+          <div className="absolute bottom-[-40px] left-1/2 -translate-x-1/2 w-[1px] h-8 bg-pink-300"></div>
+        </div>
+
+        {/* Soft pastel balloon 2 (Blue) */}
+        <div className="absolute top-28 right-8 md:right-24 w-24 h-32 bg-gradient-to-b from-[#cce9ff] to-[#9ad5ff] rounded-[50%_50%_45%_45%] opacity-70 animate-float-delayed shadow-lg shadow-sky-200/50">
+          <div className="absolute bottom-[-10px] left-1/2 -translate-x-1/2 w-2 h-3 bg-sky-300 rounded-sm"></div>
+          <div className="absolute bottom-[-40px] left-1/2 -translate-x-1/2 w-[1px] h-8 bg-sky-300"></div>
+        </div>
+
+        {/* Soft pastel balloon 3 (Pink small) */}
+        <div className="hidden lg:block absolute bottom-32 left-20 w-16 h-22 bg-gradient-to-b from-[#ffe4ec] to-[#fca5be] rounded-[50%_50%_45%_45%] opacity-60 animate-float"></div>
+
+        {/* Soft pastel balloon 4 (Blue small) */}
+        <div className="hidden lg:block absolute bottom-40 right-20 w-18 h-24 bg-gradient-to-b from-[#d9efff] to-[#aee0fc] rounded-[50%_50%_45%_45%] opacity-60 animate-float-delayed"></div>
+
+        {/* Floating Sparkles & Hearts */}
+        <div className="absolute top-1/4 left-1/3 text-pink-300 animate-shimmer">
+          <Sparkles className="w-6 h-6" />
+        </div>
+        <div className="absolute top-2/3 right-1/4 text-sky-300 animate-shimmer delay-700">
+          <Stars className="w-7 h-7" />
+        </div>
+        <div className="absolute top-1/2 left-10 text-pink-300 animate-pulse-heart">
+          <Heart className="w-5 h-5 fill-pink-200" />
+        </div>
+      </div>
+
+      {/* Top Navbar Bar / Controls */}
+      <header className="relative z-10 max-w-4xl mx-auto pt-6 px-4 flex items-center justify-between">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/70 backdrop-blur-md border border-pink-200/60 shadow-sm text-xs md:text-sm font-medium text-pink-600">
+          <Sparkles
+            className="w-4 h-4 text-pink-400 animate-spin"
+            style={{ animationDuration: "6s" }}
+          />
+          <span>Spesial Untuk Adek Kelas Favorit</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Audio Chime Toggle Button */}
+          <button
+            onClick={() => {
+              const nextMute = !isMuted;
+              setIsMuted(nextMute);
+              sounds.toggleMute(nextMute);
+              if (!nextMute) sounds.playBirthdayJingle();
+            }}
+            className="p-2.5 rounded-full bg-white/80 backdrop-blur-md border border-sky-200/70 text-sky-600 hover:bg-sky-50 transition shadow-sm"
+            title={isMuted ? "Aktifkan Musik" : "Matikan Suara"}
+          >
+            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+          </button>
+
+          {/* Share Button */}
+          <button
+            onClick={handleShare}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-white/80 backdrop-blur-md border border-pink-200/70 text-xs font-medium text-pink-600 hover:bg-pink-50 transition shadow-sm"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            <span>{copiedLink ? "Link Tersalin! ✨" : "Bagikan"}</span>
+          </button>
+        </div>
+      </header>
+
+      {/* Main Container */}
+      <div className="relative z-10 max-w-3xl mx-auto px-4 mt-8 flex flex-col items-center text-center">
+        {/* Cute Birthday Badge */}
+        <div
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-sky-100 to-pink-100 border border-pink-200 text-xs md:text-sm font-semibold text-slate-700 mb-4 shadow-sm animate-bounce"
+          style={{ animationDuration: "3s" }}
+        >
+          <span>🎉</span>
+          <span>Happy Birthday!</span>
+          <span>🎂</span>
+        </div>
+
+        {/* Main Heading */}
+        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
+          <span className="bg-gradient-to-r from-sky-400 via-pink-400 to-sky-500 bg-clip-text text-transparent">
+            Happy Birthday,
+          </span>
+          <br />
+          <span className="relative inline-block mt-1 font-black text-pink-500 drop-shadow-sm">
+            Lutfiah!
+            <span
+              className="absolute -top-3 -right-6 text-2xl animate-spin"
+              style={{ animationDuration: "5s" }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              ✨
+            </span>
+          </span>
+        </h1>
+
+        <p className="mt-4 max-w-lg text-slate-600 text-sm md:text-base leading-relaxed">
+          Semoga hari ini penuh dengan senyuman manis, kejutan yang menyenangkan, dan segala doa terbaikmu terkabul satu per satu! 🌸🎈
+        </p>
+
+        {/* Interactive Candle Section */}
+        <div className="mt-8 p-5 bg-white/80 backdrop-blur-md rounded-2xl border border-sky-100 shadow-md max-w-xs w-full flex flex-col items-center">
+          <div className="relative mb-3 flex items-center justify-center">
+            <Cake className="w-16 h-16 text-pink-400" />
+            <div
+              onClick={handleBlowCandle}
+              className={`absolute -top-2 cursor-pointer transition-transform duration-300 ${
+                isCandleBlown ? "scale-0 opacity-0" : "scale-100 opacity-100"
+              }`}
+              title="Klik untuk tiup lilin!"
             >
-              Learning
-            </a>{" "}
-            center.
+              <Flame className="w-6 h-6 text-amber-400 fill-amber-300 animate-pulse" />
+            </div>
+          </div>
+
+          <p className="text-xs font-medium text-slate-500 mb-3">
+            {isCandleBlown
+              ? "✨ Make a wish! Lilin sudah ditiup! ✨"
+              : "Make a wish & klik apinya untuk ditiup!"}
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+          <button
+            onClick={handleBlowCandle}
+            className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all duration-300 shadow-sm ${
+              isCandleBlown
+                ? "bg-sky-100 text-sky-700 hover:bg-sky-200"
+                : "bg-gradient-to-r from-pink-400 to-sky-400 text-white hover:opacity-90 active:scale-95"
+            }`}
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            {isCandleBlown ? "Nyalakan Lilin Lagi 🔥" : "Tiup Lilin 🎂"}
+          </button>
         </div>
-      </main>
-    </div>
+
+        {/* Polaroid Photo Section */}
+        <div className="mt-12 w-full flex flex-col items-center">
+          <div className="text-center mb-5">
+            <h2 className="text-xl md:text-2xl font-bold text-slate-800 flex items-center justify-center gap-2">
+              <Camera className="w-5 h-5 text-sky-400" />
+              <span>Momen Manis Bareng Lutfiah</span>
+              <Heart className="w-5 h-5 text-pink-400 fill-pink-300" />
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Kenangan seru dan hangat bersama adek kelas terbaik!
+            </p>
+          </div>
+
+          {/* Polaroid Frame */}
+          <div className="group relative bg-white p-4 pb-6 rounded-xl shadow-xl border border-pink-100/80 max-w-sm w-full transform rotate-[-1.5deg] hover:rotate-0 transition-all duration-300 hover:shadow-2xl">
+            {/* Washi Tape Accent */}
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-28 h-6 bg-pink-200/70 border border-pink-300/40 rounded-sm opacity-90 transform -rotate-2"></div>
+
+            {/* Photo Container */}
+            <div className="relative aspect-[4/3] w-full rounded-lg bg-gradient-to-tr from-sky-100 via-pink-50 to-sky-50 overflow-hidden flex items-center justify-center border border-slate-100">
+              {photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={photoUrl}
+                  alt="Foto bersama Lutfiah"
+                  className="w-full h-full object-cover rounded-md"
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center p-6 text-center text-slate-400">
+                  <div className="w-14 h-14 rounded-full bg-pink-100 flex items-center justify-center text-pink-400 mb-2 shadow-inner">
+                    <Camera className="w-7 h-7" />
+                  </div>
+                  <p className="text-xs font-semibold text-slate-600">
+                    Foto Bersama Lutfiah
+                  </p>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Klik tombol di bawah untuk memasukkan foto kalian berdua
+                  </p>
+                </div>
+              )}
+
+              {/* Upload Overlay Button */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-3 right-3 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-sm text-[11px] font-semibold text-slate-700 shadow-md hover:bg-white flex items-center gap-1.5 transition active:scale-95"
+              >
+                <Upload className="w-3.5 h-3.5 text-pink-500" />
+                <span>{photoUrl ? "Ganti Foto" : "Pilih Foto"}</span>
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="hidden"
+              />
+            </div>
+
+            {/* Polaroid Handwritten Caption */}
+            <div className="mt-4 text-center px-2">
+              <p className="font-medium text-slate-700 text-sm italic">
+                &ldquo;Momen seru bareng adek kelas terfavorit! Semoga tahun ini bawa makin banyak cerita bahagia 🌸&rdquo;
+              </p>
+              <div className="mt-2 flex items-center justify-center gap-1 text-[11px] text-pink-400 font-semibold tracking-wider uppercase">
+                <span>Special Memories</span>
+                <span>•</span>
+                <span>Forever Cherished</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="relative z-10 text-center mt-14 text-xs text-slate-400 font-medium">
+        <p>Dibuat dengan penuh senyuman spesial untuk Lutfiah 🌸</p>
+        <p className="text-[10px] text-slate-400 mt-1">Pastel Blue & Pink Edition • 2026</p>
+      </footer>
+    </main>
   );
 }
