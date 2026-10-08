@@ -114,7 +114,7 @@ const sounds = new SoundPlayer();
 export default function BirthdayPage() {
   const [isCandleBlown, setIsCandleBlown] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>("/foto_lutfiah.jpeg");
   const [copiedLink, setCopiedLink] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -198,7 +198,7 @@ export default function BirthdayPage() {
             className="w-4 h-4 text-pink-400 animate-spin"
             style={{ animationDuration: "6s" }}
           />
-          <span>Spesial Untuk Adek Kelas Favorit</span>
+         
         </div>
 
         <div className="flex items-center gap-2">
@@ -234,15 +234,15 @@ export default function BirthdayPage() {
           className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-sky-100 to-pink-100 border border-pink-200 text-xs md:text-sm font-semibold text-slate-700 mb-4 shadow-sm animate-bounce"
           style={{ animationDuration: "3s" }}
         >
-          <span>🎉</span>
-          <span>Happy Birthday!</span>
-          <span>🎂</span>
+          
+          <span>barakallah fi umrik!</span>
+          
         </div>
 
         {/* Main Heading */}
         <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
           <span className="bg-gradient-to-r from-sky-400 via-pink-400 to-sky-500 bg-clip-text text-transparent">
-            Happy Birthday,
+            Wish you all the best,
           </span>
           <br />
           <span className="relative inline-block mt-1 font-black text-pink-500 drop-shadow-sm">
@@ -257,7 +257,7 @@ export default function BirthdayPage() {
         </h1>
 
         <p className="mt-4 max-w-lg text-slate-600 text-sm md:text-base leading-relaxed">
-          Semoga hari ini penuh dengan senyuman manis, kejutan yang menyenangkan, dan segala doa terbaikmu terkabul satu per satu! 🌸🎈
+         gabisa ngasih apa-apa, aku lagi di Balikpapan soalnya ehe -Ridho
         </p>
 
         {/* Interactive Candle Section */}
@@ -277,8 +277,8 @@ export default function BirthdayPage() {
 
           <p className="text-xs font-medium text-slate-500 mb-3">
             {isCandleBlown
-              ? "✨ Make a wish! Lilin sudah ditiup! ✨"
-              : "Make a wish & klik apinya untuk ditiup!"}
+              ? "yeeyyyyy ✨"
+              : "pencet aja"}
           </p>
 
           <button
@@ -298,12 +298,10 @@ export default function BirthdayPage() {
           <div className="text-center mb-5">
             <h2 className="text-xl md:text-2xl font-bold text-slate-800 flex items-center justify-center gap-2">
               <Camera className="w-5 h-5 text-sky-400" />
-              <span>Momen Manis Bareng Lutfiah</span>
-              <Heart className="w-5 h-5 text-pink-400 fill-pink-300" />
+              <span>ntah, gada foto yg bagus di hp ku</span>
+            
             </h2>
-            <p className="text-xs text-slate-500 mt-1">
-              Kenangan seru dan hangat bersama adek kelas terbaik!
-            </p>
+      
           </div>
 
           {/* Polaroid Frame */}
@@ -325,52 +323,21 @@ export default function BirthdayPage() {
                   <div className="w-14 h-14 rounded-full bg-pink-100 flex items-center justify-center text-pink-400 mb-2 shadow-inner">
                     <Camera className="w-7 h-7" />
                   </div>
-                  <p className="text-xs font-semibold text-slate-600">
-                    Foto Bersama Lutfiah
-                  </p>
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    Klik tombol di bawah untuk memasukkan foto kalian berdua
-                  </p>
+                  
                 </div>
               )}
 
-              {/* Upload Overlay Button */}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-3 right-3 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-sm text-[11px] font-semibold text-slate-700 shadow-md hover:bg-white flex items-center gap-1.5 transition active:scale-95"
-              >
-                <Upload className="w-3.5 h-3.5 text-pink-500" />
-                <span>{photoUrl ? "Ganti Foto" : "Pilih Foto"}</span>
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoUpload}
-                className="hidden"
-              />
+              
+              
             </div>
 
             {/* Polaroid Handwritten Caption */}
-            <div className="mt-4 text-center px-2">
-              <p className="font-medium text-slate-700 text-sm italic">
-                &ldquo;Momen seru bareng adek kelas terfavorit! Semoga tahun ini bawa makin banyak cerita bahagia 🌸&rdquo;
-              </p>
-              <div className="mt-2 flex items-center justify-center gap-1 text-[11px] text-pink-400 font-semibold tracking-wider uppercase">
-                <span>Special Memories</span>
-                <span>•</span>
-                <span>Forever Cherished</span>
-              </div>
-            </div>
+            
           </div>
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="relative z-10 text-center mt-14 text-xs text-slate-400 font-medium">
-        <p>Dibuat dengan penuh senyuman spesial untuk Lutfiah 🌸</p>
-        <p className="text-[10px] text-slate-400 mt-1">Pastel Blue & Pink Edition • 2026</p>
-      </footer>
+    
     </main>
   );
 }
